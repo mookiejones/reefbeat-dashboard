@@ -108,3 +108,80 @@ function selectDevice(key) {
   renderSidebar();
   renderDetail(key);
 }
+
+// ── Render: detail pane dispatcher ────────────────────────────────────────
+function renderDetail(key) {
+  const pane = document.getElementById('detail-pane');
+  if (state.online[key] === false) {
+    pane.innerHTML = offlineBanner(key);
+    return;
+  }
+  if (!state.data[key]) {
+    pane.innerHTML = '<div class="loading-hint">Loading…</div>';
+    return;
+  }
+  if (key === 'lights') renderLights(pane);
+  else if (key === 'wave') renderWave(pane);
+  else if (key === 'ato') renderAto(pane);
+}
+
+function offlineBanner(key) {
+  const dev = DEVICES[key];
+  return `
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">${dev.icon} ${dev.name} <span class="detail-ip">${dev.ip}</span></div>
+      </div>
+    </div>
+    <div class="offline-banner">⚠ Device offline — cannot reach ${dev.ip}</div>`;
+}
+
+function sectionCard(title, content) {
+  return `<div class="section-card"><div class="section-title">${title}</div>${content}</div>`;
+}
+
+function infoGrid(cells) {
+  return `<div class="info-grid">${cells.map(([label, value, cls]) =>
+    `<div class="info-cell">
+       <div class="ic-label">${label}</div>
+       <div class="ic-value ${cls || ''}">${value}</div>
+     </div>`
+  ).join('')}</div>`;
+}
+
+function modePills(currentMode, pills, device, errorId) {
+  return `
+    <div class="mode-row">
+      ${pills.map(m => `
+        <div class="mode-pill ${currentMode === m ? 'pill-active-' + m : ''}"
+             onclick="setMode('${device}', '${m}', '${errorId}')">
+          ${m.toUpperCase()}
+        </div>`).join('')}
+    </div>
+    <div id="${errorId}" class="inline-error"></div>`;
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  setTimeout(() => { if (el) el.textContent = ''; }, 4000);
+}
+
+async function setMode(device, mode, errorId) {
+  try {
+    await apiPost(device, 'mode', { mode });
+    if (state.data[device]?.mode) state.data[device].mode.mode = mode;
+    await fetchDevice(device);
+    renderTopbar();
+    renderSidebar();
+    renderDetail(device);
+  } catch (e) {
+    showError(errorId, `Failed to set mode: ${e.message}`);
+  }
+}
+
+// Stubs — implemented in Tasks 10–11
+function renderLights(pane) { pane.innerHTML = '<div class="loading-hint">Lights view coming soon…</div>'; }
+function renderWave(pane)   { pane.innerHTML = '<div class="loading-hint">Wave view coming soon…</div>'; }
+function renderAto(pane)    { pane.innerHTML = '<div class="loading-hint">ATO view coming soon…</div>'; }
