@@ -62,7 +62,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .section-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
 .section-title { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
 
-.offline-banner { background: #2a060611; border: 1px solid var(--red); border-radius: 8px; color: var(--red); padding: 14px 18px; margin-bottom: 16px; font-weight: 600; }
+.offline-banner { background: rgba(42, 6, 6, 0.25); border: 1px solid var(--red); border-radius: 8px; color: var(--red); padding: 14px 18px; margin-bottom: 16px; font-weight: 600; }
 
 .mode-row { display: flex; gap: 8px; margin-bottom: 20px; }
 .mode-pill { padding: 6px 18px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: 1px solid var(--border-mid); background: var(--bg-input); color: var(--text-muted); transition: all 0.15s; }
