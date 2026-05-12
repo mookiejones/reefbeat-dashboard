@@ -45,7 +45,7 @@ async function fetchDevice(key) {
   }
 
   state.data[key] = merged;
-  state.online[key] = true;
+  state.online[key] = !!merged.root || !!merged.mode;
 }
 
 async function fetchAllDevices() {
@@ -240,7 +240,7 @@ function renderLights(pane) {
         </div>
         <div class="toggle-row">
           <span class="toggle-label">Enable moonphase simulation</span>
-          <div class="toggle ${mp.enabled ? 'on' : ''}" onclick="toggleMoonphase()"></div>
+          <div class="toggle ${mp.enabled ? 'on' : ''}" onclick="toggleMoonphase()"><div class="toggle-knob"></div></div>
         </div>
         <div id="lights-moon-err" class="inline-error"></div>
       `)}
@@ -254,7 +254,7 @@ function renderLights(pane) {
         ])}
         <div class="toggle-row">
           <span class="toggle-label">Enable acclimation mode</span>
-          <div class="toggle ${acc.enabled ? 'on' : ''}" onclick="toggleAcclimation()"></div>
+          <div class="toggle ${acc.enabled ? 'on' : ''}" onclick="toggleAcclimation()"><div class="toggle-knob"></div></div>
         </div>
         <div id="lights-acc-err" class="inline-error"></div>
       `)}
