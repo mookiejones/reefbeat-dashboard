@@ -41,10 +41,6 @@ async function fetchDevice(key) {
 
   const merged = {};
   for (const r of results) {
-    if (r.status === 'fulfilled') Object.assign(merged, r.value.data, { [r.value.ep]: r.value.data });
-  }
-
-  for (const r of results) {
     if (r.status === 'fulfilled') merged[r.value.ep] = r.value.data;
   }
 
@@ -67,7 +63,6 @@ async function fetchAllDevices() {
 // ── Boot ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   await fetchAllDevices();
-  renderDetail('lights');
   setInterval(fetchAllDevices, 10000);
 });
 
