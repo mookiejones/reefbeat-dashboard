@@ -1,0 +1,7 @@
+{
+  "debug.javascript.autoAttachFilter": "smart",
+  "editor.formatOnSave": true,
+  "files.exclude": {
+    "**/node_modules": true
+  }
+}

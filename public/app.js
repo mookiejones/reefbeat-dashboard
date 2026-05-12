@@ -9,6 +9,7 @@ const state = {
   selected: 'lights',
   data: { lights: null, wave: null, ato: null },
   online: { lights: null, wave: null, ato: null },
+  lastComm: { lights: null, wave: null, ato: null },
   editing: false,
 };
 
@@ -27,6 +28,7 @@ async function apiPost(device, endpoint, body) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || `${res.status}`);
+  state.lastComm[device] = new Date();
   return json;
 }
 
@@ -46,6 +48,7 @@ async function fetchDevice(key) {
 
   state.data[key] = merged;
   state.online[key] = !!merged.root || !!merged.mode;
+  if (state.online[key]) state.lastComm[key] = new Date();
 }
 
 async function fetchAllDevices() {
@@ -201,6 +204,7 @@ function renderLights(pane) {
       <div>
         <div class="detail-title">💡 Reef Lights <span class="detail-ip">· 172.16.0.21</span></div>
         <div class="detail-subtitle">${fw.chip_revision ?? 'RSLED60'} · v${fw.version ?? '—'} · Uptime ${uptime}</div>
+        <div class="last-comm-time">${state.lastComm.lights ? '↻ ' + state.lastComm.lights.toLocaleTimeString() : ''}</div>
       </div>
       <button class="btn-refresh" onclick="refreshDevice('lights')" title="Refresh">⟳</button>
     </div>
@@ -314,9 +318,9 @@ async function refreshDevice(key) {
 }
 
 async function sendManual() {
-  const white = parseFloat(document.getElementById('num-white')?.value ?? 0);
-  const blue  = parseFloat(document.getElementById('num-blue')?.value  ?? 0);
-  const moon  = parseFloat(document.getElementById('num-moon')?.value  ?? 0);
+  const white = Math.round(parseFloat(document.getElementById('num-white')?.value) || 0);
+  const blue  = Math.round(parseFloat(document.getElementById('num-blue')?.value)  || 0);
+  const moon  = Math.round(parseFloat(document.getElementById('num-moon')?.value)  || 0);
   try {
     await apiPost('lights', 'manual', { white, blue, moon });
     await fetchDevice('lights');
@@ -336,10 +340,10 @@ async function resetChannels() {
 }
 
 async function sendTimer() {
-  const white    = parseFloat(document.getElementById('num-white')?.value ?? 0);
-  const blue     = parseFloat(document.getElementById('num-blue')?.value  ?? 0);
-  const moon     = parseFloat(document.getElementById('num-moon')?.value  ?? 0);
-  const duration = parseInt(document.getElementById('timer-duration')?.value ?? 30, 10);
+  const white    = Math.round(parseFloat(document.getElementById('num-white')?.value) || 0);
+  const blue     = Math.round(parseFloat(document.getElementById('num-blue')?.value)  || 0);
+  const moon     = Math.round(parseFloat(document.getElementById('num-moon')?.value)  || 0);
+  const duration = parseInt(document.getElementById('timer-duration')?.value, 10) || 30;
   try {
     await apiPost('lights', 'timer', { white, blue, moon, duration });
     await fetchDevice('lights');
@@ -392,6 +396,7 @@ function renderWave(pane) {
       <div>
         <div class="detail-title">🌊 Reef Wave <span class="detail-ip">· 172.16.0.19</span></div>
         <div class="detail-subtitle">${fw.chip_revision ?? 'RSWAVE25'} · v${fw.version ?? '—'} · Uptime ${sys.uptime ?? '—'}</div>
+        <div class="last-comm-time">${state.lastComm.wave ? '↻ ' + state.lastComm.wave.toLocaleTimeString() : ''}</div>
       </div>
       <button class="btn-refresh" onclick="refreshDevice('wave')" title="Refresh">⟳</button>
     </div>
@@ -437,6 +442,7 @@ function renderAto(pane) {
       <div>
         <div class="detail-title">💧 Reef ATO+ <span class="detail-ip">· 172.16.0.20</span></div>
         <div class="detail-subtitle">${fw.chip_revision ?? 'RSATO+'} · v${fw.version ?? '—'} · Uptime ${sys.uptime ?? '—'}</div>
+        <div class="last-comm-time">${state.lastComm.ato ? '↻ ' + state.lastComm.ato.toLocaleTimeString() : ''}</div>
       </div>
       <button class="btn-refresh" onclick="refreshDevice('ato')" title="Refresh">⟳</button>
     </div>

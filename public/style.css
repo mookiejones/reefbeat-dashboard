@@ -58,6 +58,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .detail-title { font-size: 18px; font-weight: 700; color: #e2edf5; display: flex; align-items: center; gap: 10px; }
 .detail-ip { font-size: 12px; color: var(--text-muted); font-weight: 400; }
 .detail-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.last-comm-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; opacity: 0.7; }
 
 .section-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
 .section-title { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
