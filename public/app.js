@@ -375,6 +375,93 @@ async function toggleAcclimation() {
   }
 }
 
-// Stubs for Wave/ATO — implemented in Task 11
-function renderWave(pane)   { pane.innerHTML = '<div class="loading-hint">Wave view coming soon…</div>'; }
-function renderAto(pane)    { pane.innerHTML = '<div class="loading-hint">ATO view coming soon…</div>'; }
+// ── Render: Reef Wave ──────────────────────────────────────────────────────
+function renderWave(pane) {
+  const d = state.data.wave;
+  const fw = d.firmware || {};
+  const sys = d.root || d;
+  const mode = d.mode?.mode ?? 'auto';
+  const wifi = d.wifi || {};
+
+  pane.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">🌊 Reef Wave <span class="detail-ip">· 172.16.0.19</span></div>
+        <div class="detail-subtitle">${fw.chip_revision ?? 'RSWAVE25'} · v${fw.version ?? '—'} · Uptime ${sys.uptime ?? '—'}</div>
+      </div>
+      <button class="btn-refresh" onclick="refreshDevice('wave')" title="Refresh">⟳</button>
+    </div>
+
+    ${modePills(mode, ['auto', 'manual'], 'wave', 'wave-mode-err')}
+
+    ${sectionCard('Status', infoGrid([
+      ['MODE',     mode.toUpperCase(), mode === 'auto' ? 'ic-value-ok' : 'ic-value-warn'],
+      ['UPTIME',   sys.uptime ?? '—', ''],
+      ['FIRMWARE', 'v' + (fw.version ?? '—'), ''],
+      ['SIGNAL',   wifi.signal_dBm != null ? wifi.signal_dBm + ' dBm' : '—', ''],
+    ]))}
+
+    ${sectionCard('Note', `
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6">
+        Wave pattern and flow speed are configured in the ReefBeat mobile app.
+        This dashboard can toggle between AUTO and MANUAL mode only.
+      </p>
+    `)}
+
+    ${sectionCard('Device Info', infoGrid([
+      ['IP ADDRESS', '172.16.0.19', ''],
+      ['CHIP',       fw.chip_revision ?? 'RSWAVE25', ''],
+      ['FREE HEAP',  sys.free_heap ? sys.free_heap.toLocaleString() + ' B' : '—', ''],
+      ['RTC',        sys.rtc_connected ? 'Connected' : 'Not connected', sys.rtc_connected ? 'ic-value-ok' : 'ic-value-warn'],
+      ['SSID',       wifi.ssid ?? '—', ''],
+      ['MAC',        wifi.mac ?? '—', ''],
+    ]))}
+  `;
+}
+
+// ── Render: Reef ATO+ ─────────────────────────────────────────────────────
+function renderAto(pane) {
+  const d = state.data.ato;
+  const fw = d.firmware || {};
+  const sys = d.root || d;
+  const mode = d.mode?.mode ?? 'auto';
+  const wifi = d.wifi || {};
+  const hasRtc = !!sys.rtc_connected;
+
+  pane.innerHTML = `
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">💧 Reef ATO+ <span class="detail-ip">· 172.16.0.20</span></div>
+        <div class="detail-subtitle">${fw.chip_revision ?? 'RSATO+'} · v${fw.version ?? '—'} · Uptime ${sys.uptime ?? '—'}</div>
+      </div>
+      <button class="btn-refresh" onclick="refreshDevice('ato')" title="Refresh">⟳</button>
+    </div>
+
+    ${!hasRtc ? `<div class="offline-banner" style="border-color:var(--amber);color:var(--amber)">⚠ No RTC connected — time-based schedules may be affected</div>` : ''}
+
+    ${modePills(mode, ['auto', 'manual'], 'ato', 'ato-mode-err')}
+
+    ${sectionCard('Status', infoGrid([
+      ['MODE',     mode.toUpperCase(), mode === 'auto' ? 'ic-value-ok' : 'ic-value-warn'],
+      ['UPTIME',   sys.uptime ?? '—', ''],
+      ['FIRMWARE', 'v' + (fw.version ?? '—'), ''],
+      ['SIGNAL',   wifi.signal_dBm != null ? wifi.signal_dBm + ' dBm' : '—', ''],
+    ]))}
+
+    ${sectionCard('Note', `
+      <p style="font-size:12px;color:var(--text-muted);line-height:1.6">
+        Water level sensor readings and top-off history are not exposed by the local API.
+        Use the ReefBeat app to view sensor data and configure top-off thresholds.
+      </p>
+    `)}
+
+    ${sectionCard('Device Info', infoGrid([
+      ['IP ADDRESS', '172.16.0.20', ''],
+      ['CHIP',       fw.chip_revision ?? 'RSATO+', ''],
+      ['FREE HEAP',  sys.free_heap ? sys.free_heap.toLocaleString() + ' B' : '—', ''],
+      ['RTC',        hasRtc ? 'Connected' : 'Not connected', hasRtc ? 'ic-value-ok' : 'ic-value-warn'],
+      ['SSID',       wifi.ssid ?? '—', ''],
+      ['MAC',        wifi.mac ?? '—', ''],
+    ]))}
+  `;
+}
