@@ -1,2 +1,28 @@
 <!DOCTYPE html>
-<html><body><h1>ReefBeat Dashboard</h1></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReefBeat Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-logo">🐠 REEFBEAT</div>
+    <div class="topbar-right">
+      <div id="status-bar" class="status-bar"></div>
+      <span id="last-refresh" class="last-refresh">—</span>
+    </div>
+  </header>
+  <div class="app">
+    <nav class="sidebar">
+      <div class="sidebar-label">DEVICES</div>
+      <div id="device-list"></div>
+    </nav>
+    <main id="detail-pane" class="detail-pane">
+      <div class="loading-hint">Select a device from the sidebar</div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
