@@ -327,8 +327,12 @@ async function sendManual() {
 }
 
 async function resetChannels() {
-  await fetchDevice('lights');
-  renderDetail('lights');
+  try {
+    await fetchDevice('lights');
+    renderDetail('lights');
+  } catch (e) {
+    showError('lights-manual-err', `Failed to refresh: ${e.message}`);
+  }
 }
 
 async function sendTimer() {
