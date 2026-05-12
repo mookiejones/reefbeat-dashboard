@@ -70,3 +70,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderDetail('lights');
   setInterval(fetchAllDevices, 10000);
 });
+
+// ── Render: topbar ─────────────────────────────────────────────────────────
+function renderTopbar() {
+  const bar = document.getElementById('status-bar');
+  bar.innerHTML = Object.entries(DEVICES).map(([key, dev]) => {
+    const online = state.online[key];
+    const cls = online === null ? 'dot-amber' : online ? 'dot-green' : 'dot-red';
+    const label = online === null ? 'connecting' : online ? 'online' : 'offline';
+    return `<div class="status-dot"><div class="dot ${cls}"></div>${dev.icon} ${label}</div>`;
+  }).join('');
+}
+
+// ── Render: sidebar ────────────────────────────────────────────────────────
+function renderSidebar() {
+  const list = document.getElementById('device-list');
+  list.innerHTML = Object.entries(DEVICES).map(([key, dev]) => {
+    const d = state.data[key];
+    const online = state.online[key];
+    const mode = d?.mode?.mode ?? (online === false ? 'offline' : '…');
+    const badgeClass = online === false ? 'badge-offline' : mode === 'manual' ? 'badge-manual' : 'badge-auto';
+    const activeClass = state.selected === key ? 'active' : '';
+    return `
+      <div class="device-item ${activeClass}" onclick="selectDevice('${key}')">
+        <span class="di-icon">${dev.icon}</span>
+        <div class="di-info">
+          <div class="di-name">${dev.name}</div>
+          <div class="di-model">${dev.model}</div>
+        </div>
+        <span class="di-badge ${badgeClass}">${mode.toUpperCase()}</span>
+      </div>`;
+  }).join('');
+}
+
+function selectDevice(key) {
+  state.selected = key;
+  renderSidebar();
+  renderDetail(key);
+}
