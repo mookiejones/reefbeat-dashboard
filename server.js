@@ -1,57 +1,97 @@
-const express = require('express');
+'use strict';
+
 const path = require('path');
-const fetch = require('node-fetch');
-const devices = require('./devices');
+const express = require('express');
+const { publicCatalog } = require('./devices');
+const { bindConfig, formatOrigin, requireSecret } = require('./lib/config');
+const { HttpError, queryFrom, proxyRequest } = require('./lib/proxy');
 
 const DEVICE_TIMEOUT_MS = 5000;
 
-async function proxyFetch(url, options = {}) {
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(), DEVICE_TIMEOUT_MS);
-  try {
-    const upstream = await fetch(url, { ...options, signal: ac.signal });
-    const text = await upstream.text();
-    let body;
-    try { body = JSON.parse(text); } catch { body = { raw: text }; }
-    return { status: upstream.status, body };
-  } finally {
-    clearTimeout(timer);
+function createApp(options = {}) {
+  const fetchImpl = options.fetchImpl || globalThis.fetch;
+  const timeoutMs = options.timeoutMs ?? DEVICE_TIMEOUT_MS;
+  const secret = options.secret !== undefined ? options.secret : (process.env.DASHBOARD_SECRET || '');
+
+  const app = express();
+  app.disable('x-powered-by');
+  app.use(express.json());
+  app.use('/api', requireSecret(secret));
+
+  app.get('/api/devices', (req, res) => {
+    res.json(publicCatalog());
+  });
+
+  async function proxy(req, res, next) {
+    try {
+      const result = await proxyRequest({
+        deviceKey: req.params.device,
+        endpoint: req.params.endpoint || '',
+        method: req.method.toUpperCase(),
+        search: queryFrom(req.originalUrl || req.url),
+        body: req.body,
+        fetchImpl,
+        timeoutMs,
+      });
+      res.status(result.status).json(result.body);
+    } catch (err) {
+      if (err instanceof HttpError) {
+        res.status(err.status).json({ error: err.message });
+        return;
+      }
+      next(err);
+    }
   }
+
+  app.all('/api/:device/:endpoint', proxy);
+  app.all('/api/:device', proxy);
+  app.use('/api', (req, res) => {
+    res.status(404).json({ error: 'Unknown endpoint' });
+  });
+
+  app.use(express.static(path.join(__dirname, 'public')));
+
+  app.use((err, req, res, next) => {
+    if (err.type === 'entity.parse.failed') {
+      res.status(400).json({ error: 'Invalid JSON' });
+      return;
+    }
+    console.error(err);
+    if (res.headersSent) {
+      next(err);
+      return;
+    }
+    res.status(500).json({ error: 'Internal error' });
+  });
+
+  return app;
 }
 
-const app = express();
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.get('/api/:device/:endpoint(*)', async (req, res) => {
-  const device = devices[req.params.device];
-  if (!device) return res.status(404).json({ error: `Unknown device: ${req.params.device}` });
-  try {
-    const { status, body } = await proxyFetch(`http://${device.ip}/${req.params.endpoint}`);
-    res.status(status).json(body);
-  } catch (err) {
-    res.status(502).json({ error: `Device unreachable: ${err.message}` });
-  }
-});
-
-app.post('/api/:device/:endpoint(*)', async (req, res) => {
-  const device = devices[req.params.device];
-  if (!device) return res.status(404).json({ error: `Unknown device: ${req.params.device}` });
-  try {
-    const { status, body } = await proxyFetch(`http://${device.ip}/${req.params.endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
-    });
-    res.status(status).json(body);
-  } catch (err) {
-    res.status(502).json({ error: `Device unreachable: ${err.message}` });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-if (require.main === module) {
-  app.listen(PORT, () => console.log(`ReefBeat Dashboard running at http://localhost:${PORT}`));
+function listen(app, env = process.env) {
+  const cfg = bindConfig(env);
+  return new Promise((resolve, reject) => {
+    const server = app.listen(cfg.port, cfg.host, () => resolve({ server, cfg }));
+    server.on('error', reject);
+  });
 }
 
-module.exports = app;
+function main() {
+  let cfg;
+  try {
+    cfg = bindConfig();
+  } catch (err) {
+    console.error(err.message);
+    process.exit(1);
+  }
+  const app = createApp();
+  app.listen(cfg.port, cfg.host, () => {
+    const auth = cfg.secret ? ' (shared secret required)' : '';
+    console.log(`ReefBeat Dashboard running at ${formatOrigin(cfg.host, cfg.port)}${auth}`);
+  });
+}
+
+if (require.main === module) main();
+
+module.exports = createApp();
+module.exports.createApp = createApp;
+module.exports.listen = listen;

@@ -46,6 +46,7 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .device-item .di-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
 .badge-auto    { background: #062a1a; color: var(--green); }
 .badge-manual  { background: #2a1a06; color: var(--amber); }
+.badge-timer   { background: #0a1a2e; color: var(--accent); }
 .badge-offline { background: #2a0606; color: var(--red); }
 
 .status-dot { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); }
@@ -64,6 +65,15 @@ html, body { height: 100%; background: var(--bg); color: var(--text); font-famil
 .section-title { font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
 
 .offline-banner { background: rgba(42, 6, 6, 0.25); border: 1px solid var(--red); border-radius: 8px; color: var(--red); padding: 14px 18px; margin-bottom: 16px; font-weight: 600; }
+.rtc-warn { border-color: var(--amber); color: var(--amber); background: rgba(42, 26, 6, 0.35); }
+
+.auth-gate { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(5, 14, 26, 0.92); }
+.auth-gate.hidden { display: none; }
+.auth-card { width: 320px; background: var(--bg-card); border: 1px solid var(--border-mid); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+.auth-title { font-size: 16px; font-weight: 700; color: #e2edf5; }
+.auth-copy { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.auth-card input { background: var(--bg-input); border: 1px solid var(--border-mid); border-radius: 6px; color: var(--text); padding: 8px 10px; font-size: 13px; }
+.auth-card input:focus { outline: none; border-color: var(--accent); }
 
 .mode-row { display: flex; gap: 8px; margin-bottom: 20px; }
 .mode-pill { padding: 6px 18px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 1px; cursor: pointer; border: 1px solid var(--border-mid); background: var(--bg-input); color: var(--text-muted); transition: all 0.15s; }
