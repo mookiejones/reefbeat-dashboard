@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="auth-gate" class="auth-gate hidden">
+    <form id="auth-form" class="auth-card">
+      <div class="auth-title">Dashboard locked</div>
+      <p class="auth-copy">Enter the shared secret to control these devices.</p>
+      <input id="auth-secret" type="password" autocomplete="current-password" placeholder="Shared secret">
+      <button class="btn btn-primary" type="submit">Unlock</button>
+      <div id="auth-error" class="inline-error"></div>
+    </form>
+  </div>
   <header class="topbar">
     <div class="topbar-logo">🐠 REEFBEAT</div>
     <div class="topbar-right">
@@ -23,6 +32,7 @@
       <div class="loading-hint">Select a device from the sidebar</div>
     </main>
   </div>
+  <script src="format.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
