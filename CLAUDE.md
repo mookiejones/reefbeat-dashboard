@@ -10,7 +10,9 @@ ReefBeat Dashboard — a local Node.js/Express web app for monitoring and contro
 
 ```bash
 npm install       # install dependencies
-node server.js    # start server on localhost:3000
+node server.js    # start server on 127.0.0.1:3000
+# LAN access requires both:
+# HOST=0.0.0.0 DASHBOARD_SECRET='...' node server.js
 ```
 
 No build step. No transpilation. The app runs directly with Node.js.
@@ -18,35 +20,40 @@ No build step. No transpilation. The app runs directly with Node.js.
 ## Architecture
 
 ```
-Browser (localhost:3000)
+Browser (127.0.0.1:3000)
         │
         ▼
   Express server (server.js)
-  ├── GET  /api/:device/*  → proxy GET  to device IP
-  ├── POST /api/:device/*  → proxy POST to device IP
-  └── GET  /               → serve public/index.html
+  ├── lib/config.js                → bind address and shared secret
+  ├── lib/proxy.js                 → allowlisted fetch, no redirects
+  ├── GET  /api/devices            → public view of devices.js
+  ├── GET/POST/DELETE /api/:device/:endpoint
+  └── GET  /                       → serve public/
 
-  Device map (devices.js):
+  devices.js is the only device map (name, IP, allowed methods and paths):
   ├── lights  → 172.16.0.21  (Reef Lights, RSLED60)
   ├── wave    → 172.16.0.19  (Reef Wave, RSWAVE25)
   └── ato     → 172.16.0.20  (Reef ATO+, RSATO+)
 ```
 
-**Stack:** Node.js + Express backend (proxy only — no DB, no auth), vanilla HTML/CSS/JS frontend (no framework, no bundler).
+**Stack:** Node.js + Express backend (proxy only — no DB; shared secret only when bound beyond loopback), vanilla HTML/CSS/JS frontend (no framework, no bundler). Uses Node's built-in `fetch`.
 
-**Files to create:**
-- `server.js` — Express server + generic proxy routes
-- `devices.js` — device name → IP mapping
-- `package.json`
-- `public/index.html` — app shell (top bar + sidebar + detail pane)
-- `public/app.js` — all UI logic, fetch calls, state management
-- `public/style.css` — deep ocean dark theme
+**Layout:**
+- `devices.js` — catalog and allowlist
+- `lib/config.js` — `HOST`, `PORT`, `DASHBOARD_SECRET`
+- `lib/proxy.js` — device URL, timeout, redirect refusal
+- `server.js` — routes only
+- `public/format.js` — HTML escaping, day counts, channel tenths
+- `public/app.js` — UI state and rendering
+- `public/index.html`, `public/style.css`
 
 ## Key Implementation Details
 
-**Proxy layer:** One generic route handles all device communication. The frontend speaks the device API directly through the proxy — no payload transformation on the server.
+**Proxy layer:** Allowlisted device paths only. The frontend speaks the device API through the proxy — no payload transformation on the server. Query strings are forwarded. Upstream redirects are refused. The process binds to `127.0.0.1` unless `HOST` is set, and a non-loopback bind requires `DASHBOARD_SECRET` (`Authorization: Bearer`).
 
-**Lights channel scaling:** `GET /lights` returns integers ×100 (e.g. 8850 = 88.5%). Divide by 100 for display; send plain 0–100 values to `POST /manual`.
+**Moon phase / acclimation disable:** `DELETE /moonphase` and `DELETE /acclimation`. This does not change `/mode`. It matches the ReefBeat Home Assistant integration and has not been confirmed on this tank's RSLED60.
+
+**Lights channel scaling:** `GET /lights` returns integers ×100 (e.g. 8850 = 88.5%). Divide by 100 for display; `POST /manual` and `POST /timer` send the same tenth (88.5, not 89).
 
 **Auto-refresh:** Poll all three devices every 10 seconds. Polling must not overwrite values the user is actively editing.
 
